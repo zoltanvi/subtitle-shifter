@@ -1,56 +1,30 @@
 package com.subtitleshifter.GUI;
 
-import com.subtitleshifter.SubtitleShifter;
-import com.subtitleshifter.TheTime;
-
-import java.awt.EventQueue;
-import java.awt.FlowLayout;
-
+import com.subtitleshifter.Shifter.SubtitleShifter;
 
 import javax.swing.*;
-import java.awt.BorderLayout;
-import javax.swing.border.TitledBorder;
-import java.awt.Color;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+
+import java.awt.*;
 import java.io.File;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
 
-public class GUI{
+public class GUI {
 
+    private JButton okButton;
+    private JButton cancelButton;
+    private JSpinner hourSpinner;
+    private JSpinner minuteSpinner;
+    private JSpinner secondSpinner;
+    private JSpinner millisecondSpinner;
+    private JButton openButton;
+    private JButton openButton2;
     private JFrame frmSubtitleShifter;
     private JTextField txtPath;
     private JTextField txtPath2;
-    JButton okButton;
-    JButton cancelButton;
-    JSpinner hourSpinner;
-    JSpinner minuteSpinner;
-    JSpinner secondSpinner;
-    JSpinner millisecondSpinner;
-    JButton openButton;
-    JButton openButton2;
-    SubtitleShifter shifter;
 
-
-    /**
-     * Launch the application.
-     */
-    public static void main(String[] args) {
-        EventQueue.invokeLater(() ->
-        {
-            try {
-                GUI window = new GUI();
-                window.frmSubtitleShifter.setVisible(true);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
 
     /**
      * Create the application.
@@ -67,7 +41,9 @@ public class GUI{
         frmSubtitleShifter.setResizable(false);
         frmSubtitleShifter.setTitle("Subtitle Shifter");
         frmSubtitleShifter.setBounds(100, 100, 450, 550);
-        frmSubtitleShifter.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frmSubtitleShifter.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
+        frmSubtitleShifter.setVisible(true);
 
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -88,33 +64,21 @@ public class GUI{
         panel.add(bottomPanel, BorderLayout.SOUTH);
 
         okButton = new JButton("Ok");
-
-
         bottomPanel.add(okButton);
-
 
         cancelButton = new JButton("Cancel");
         bottomPanel.add(cancelButton);
-        cancelButton.addActionListener(e ->
-        {
-            System.exit(0);
-        });
+        cancelButton.addActionListener(e -> System.exit(0));
 
         JPanel middlePanel = new JPanel();
         middlePanel.setBorder(new TitledBorder(null, "Step 3: Set the values to shift", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         panel.add(middlePanel, BorderLayout.CENTER);
         middlePanel.setLayout(new GridLayout(4, 1, 0, 0));
 
-
-
-
         JPanel panelHours = new JPanel();
         middlePanel.add(panelHours);
         panelHours.setLayout(null);
         panelHours.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Hours", TitledBorder.LEFT, TitledBorder.TOP, null, new Color(0, 0, 0)));
-
-
-
 
         hourSpinner = new JSpinner();
         hourSpinner.setBounds(12, 24, 100, 30);
@@ -167,13 +131,11 @@ public class GUI{
                 fc.setFileFilter(new FileNameExtensionFilter("Subtitles", "srt"));
                 fc.showOpenDialog(frmSubtitleShifter);
                 txtPath.setText(fc.getSelectedFile().getAbsolutePath());
-            } catch (Exception y){
+            } catch (Exception y) {
                 JOptionPane.showMessageDialog(frmSubtitleShifter,
                         "Please select a subtitle!",
                         "Error", JOptionPane.ERROR_MESSAGE);
             }
-
-
         });
         openButton.setHorizontalAlignment(SwingConstants.LEFT);
         topPanel.add(openButton);
@@ -200,13 +162,11 @@ public class GUI{
                 fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 fc.showOpenDialog(frmSubtitleShifter);
                 txtPath2.setText(fc.getSelectedFile().getAbsolutePath());
-            } catch (Exception y){
+            } catch (Exception y) {
                 JOptionPane.showMessageDialog(frmSubtitleShifter,
                         "Please select a folder!",
                         "Error", JOptionPane.ERROR_MESSAGE);
             }
-
-
         });
         openButton2.setHorizontalAlignment(SwingConstants.LEFT);
         toptitle.add(openButton2);
@@ -215,25 +175,17 @@ public class GUI{
         toptitle.add(txtPath2);
         txtPath2.setColumns(30);
 
-
-
-
-
         okButton.addActionListener(e ->
         {
-            System.out.println("ok lenyomva...");
-            shifter = new SubtitleShifter();
             try {
-
-                if(!txtPath.getText().isEmpty() && !txtPath2.getText().isEmpty()){
-
-
+                if (!txtPath.getText().isEmpty() && !txtPath2.getText().isEmpty()) {
                     try {
                         hourSpinner.commitEdit();
                         minuteSpinner.commitEdit();
                         secondSpinner.commitEdit();
                         millisecondSpinner.commitEdit();
-                    } catch ( ParseException ex ) {
+                    } catch (ParseException ex) {
+                        ex.printStackTrace();
                     }
                     int temphour = (Integer) hourSpinner.getValue();
                     int tempminute = (Integer) minuteSpinner.getValue();
@@ -253,34 +205,25 @@ public class GUI{
                                 "Time shifted successfully!",
                                 "Success", JOptionPane.PLAIN_MESSAGE);
 
-
-                    } catch (Exception xx){
+                    } catch (Exception xx) {
+                        xx.printStackTrace();
                         JOptionPane.showMessageDialog(frmSubtitleShifter,
                                 "Something went wrong!",
                                 "Error", JOptionPane.ERROR_MESSAGE);
                     }
 
-
-
-
                 } else {
                     JOptionPane.showMessageDialog(frmSubtitleShifter,
                             "Please enter correct paths for the files!",
                             "Error", JOptionPane.ERROR_MESSAGE);
-
                 }
-
-
-            } catch (Exception x){
+            } catch (Exception x) {
+                x.printStackTrace();
                 JOptionPane.showMessageDialog(frmSubtitleShifter,
                         "Something wrong with the subtite file." +
                                 "Please check it!",
                         "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
-
-
-
     }
-
 }
