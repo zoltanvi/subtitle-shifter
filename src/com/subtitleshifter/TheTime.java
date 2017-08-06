@@ -22,60 +22,29 @@ public class TheTime {
     }
 
     public void changeTime(int h, int m, int s, int mi) {
+        long changemillis = (h * 3600000) + (m * 60000) + (s * 1000) + mi;
 
-        if(h >= 0 && m >= 0 && s >= 0 && mi >= 0){      // TODO: This is just a temporary check
-            int rem_h1 = h;
-            int rem_h2 = h;
-            int rem_m1 = m;
-            int rem_m2 = m;
-            int rem_s1 = s;
-            int rem_s2 = s;
+            long newd1 = (this.hour1 * 1000 * 60 * 60) +
+                    (this.minute1 * 1000 * 60) +
+                    (this.second1 * 1000) +
+                    this.milli1;
+            long newd2 = (this.hour2 * 1000 * 60 * 60) +
+                    (this.minute2 * 1000 * 60) +
+                    (this.second2 * 1000) +
+                    this.milli2;
 
-            if ((this.milli1 + mi) >= 1000) {
-                rem_s1 += ((this.milli1 + mi) / 1000);
-                this.milli1 = ((this.milli1 + mi) % 1000);
-            } else {
-                this.milli1 += mi;
-            }
+            newd1 += changemillis;
+            newd2 += changemillis;
 
-            if ((this.milli2 + mi) >= 1000) {
-                rem_s2 += ((this.milli2 + mi) / 1000);
-                this.milli2 = ((this.milli2 + mi) % 1000);
-            } else {
-                this.milli2 += mi;
-            }
+            this.milli1 = ((newd1 % 1000) < 0 ? 0 : (int)(newd1 % 1000)) ;
+            this.second1 = ((newd1 / 1000) % 60) < 0 ? 0 : (int)(newd1 / 1000) % 60;
+            this.minute1 = ((newd1 / (1000 * 60)) % 60) < 0 ? 0 : (int)(newd1 / (1000 * 60)) % 60;
+            this.hour1 = ((newd1 / (1000 * 60 * 60)) % 24) < 0 ? 0 : (int)(newd1 / (1000 * 60 * 60)) % 24;
 
-            if ((this.second1 + rem_s1) >= 60) {
-                rem_m1 += ((this.second1 + rem_s1) / 60);
-                this.second1 = ((this.second1 + rem_s1) % 60);
-            } else {
-                this.second1 += rem_s1;
-            }
-
-            if ((this.second2 + rem_s2) >= 60) {
-                rem_m2 += ((this.second2 + rem_s2) / 60);
-                this.second2 = ((this.second2 + rem_s2) % 60);
-            } else {
-                this.second2 += rem_s2;
-            }
-
-            if ((this.minute1 + rem_m1) >= 60) {
-                rem_h1 += ((this.minute1 + rem_m1) / 60);
-                this.minute1 = ((this.minute1 + rem_m1) % 60);
-            } else {
-                this.minute1 += rem_m1;
-            }
-
-            if ((this.minute2 + rem_m2) >= 60) {
-                rem_h2 += ((this.minute2 + rem_m2) / 60);
-                this.minute2 = ((this.minute2 + rem_m2) % 60);
-            } else {
-                this.minute2 += rem_m2;
-            }
-
-            this.hour1 += rem_h1;
-            this.hour2 += rem_h2;
-        }
+            this.milli2 = ((newd2 % 1000)) < 0 ? 0 : (int)(newd2 % 1000);
+            this.second2 = ((newd2 / 1000) % 60) < 0 ? 0 : (int)(newd2 / 1000) % 60;
+            this.minute2 = ((newd2 / (1000 * 60)) % 60) < 0 ? 0 : (int)(newd2 / (1000 * 60)) % 60;
+            this.hour2 = ((newd2 / (1000 * 60 * 60)) % 24) < 0 ? 0 : (int)(newd2 / (1000 * 60 * 60)) % 24;
     }
 
 
