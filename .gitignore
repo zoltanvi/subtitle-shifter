@@ -20,3 +20,5 @@ src/com/subtitleshifter/Test
 .idea/modules.xml
 out/*
 src/META-INF
+error.log
+

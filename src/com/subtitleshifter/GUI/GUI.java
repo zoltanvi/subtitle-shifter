@@ -1,5 +1,6 @@
 package com.subtitleshifter.GUI;
 
+import com.subtitleshifter.Util.MyFormatter;
 import com.subtitleshifter.Shifter.SubtitleShifter;
 
 import javax.swing.*;
@@ -9,9 +10,14 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 import java.text.ParseException;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class GUI {
+public class GUI{
 
     private JButton okButton;
     private JButton cancelButton;
@@ -19,31 +25,34 @@ public class GUI {
     private JSpinner minuteSpinner;
     private JSpinner secondSpinner;
     private JSpinner millisecondSpinner;
-    private JButton openButton;
-    private JButton openButton2;
-    private JFrame frmSubtitleShifter;
-    private JTextField txtPath;
-    private JTextField txtPath2;
-
-
-    /**
-     * Create the application.
-     */
-    public GUI() {
-        initialize();
-    }
+    private JButton btnOpenInput;
+    private JButton btnOpenOutput;
+    private JFrame frame;
+    private JTextField txtInputPath;
+    private JTextField txtOutputPath;
+    private JPanel topPanel;
+    private JPanel middlePanel;
+    private JPanel bottomPanel;
+    private JPanel firstTopPanel;
+    private JPanel secondTopPanel;
+    private JPanel mainPanel;
+    private JTextField txtFileName;
+    static Logger logger = Logger.getLogger(GUI.class.getName());
+    private static final int MAX_HOURS = 580;
+    private static final int MAX_MINUTES = 34800;
+    private static final int MAX_SECONDS = 2088000;
+    private static final int MAX_MILLISECONDS = 2088000000;
 
     /**
      * Initialize the contents of the frame.
      */
-    private void initialize() {
-        frmSubtitleShifter = new JFrame();
-        frmSubtitleShifter.setResizable(false);
-        frmSubtitleShifter.setTitle("Subtitle Shifter");
-        frmSubtitleShifter.setBounds(100, 100, 450, 550);
-        frmSubtitleShifter.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
-        frmSubtitleShifter.setVisible(true);
+    public void initialize() {
+        frame = new JFrame();
+        frame.setResizable(false);
+        frame.setTitle("Subtitle Shifter");
+        frame.setBounds(100, 100, 500, 550);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        frame.setVisible(true);
 
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -51,17 +60,51 @@ public class GUI {
                 UnsupportedLookAndFeelException |
                 IllegalAccessException |
                 InstantiationException e) {
-            e.printStackTrace();
+            logMe(e.toString());
         }
 
-        JPanel panel = new JPanel();
-        panel.setBorder(new EmptyBorder(5, 5, 5, 5));
-        frmSubtitleShifter.getContentPane().add(panel, BorderLayout.CENTER);
-        panel.setLayout(new BorderLayout(0, 0));
+        initMainPanel();
+    }
 
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        bottomPanel.setBorder(new TitledBorder(null, "Step 4: Click Ok", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        panel.add(bottomPanel, BorderLayout.SOUTH);
+    private void initMainPanel(){
+        mainPanel = new JPanel();
+        mainPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        frame.getContentPane().add(mainPanel, BorderLayout.CENTER);
+        mainPanel.setLayout(new BorderLayout(0, 0));
+
+        initTopPanel();
+        initMiddlePanel();
+        initBottomPanel();
+    }
+
+    private void initTopPanel(){
+        topPanel = new JPanel();
+        topPanel.setLayout(new GridLayout(2, 1, 0, 0));
+        topPanel.setBorder(new EmptyBorder(10, 5, 0, 5));
+        mainPanel.add(topPanel, BorderLayout.NORTH);
+
+        initFirstTopPanel();
+        initSecondTopPanel();
+    }
+
+    private void initMiddlePanel(){
+        middlePanel = new JPanel();
+        middlePanel.setBorder(new TitledBorder(null, "Step 3: Set the values to shift",
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        mainPanel.add(middlePanel, BorderLayout.CENTER);
+        middlePanel.setLayout(new GridLayout(4, 1, 0, 0));
+
+        initHoursPanel();
+        initMinutesPanel();
+        initSecondsPanel();
+        initMillisPanel();
+    }
+
+    private void initBottomPanel(){
+        bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
+        bottomPanel.setBorder(new TitledBorder(null, "Step 4: Click Ok",
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
         okButton = new JButton("Ok");
         bottomPanel.add(okButton);
@@ -70,11 +113,159 @@ public class GUI {
         bottomPanel.add(cancelButton);
         cancelButton.addActionListener(e -> System.exit(0));
 
-        JPanel middlePanel = new JPanel();
-        middlePanel.setBorder(new TitledBorder(null, "Step 3: Set the values to shift", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        panel.add(middlePanel, BorderLayout.CENTER);
-        middlePanel.setLayout(new GridLayout(4, 1, 0, 0));
+        okButton.addActionListener(e ->
+        {
+            try {
+                if((int)hourSpinner.getValue() <= MAX_HOURS &&
+                        (int)hourSpinner.getValue() >= (-MAX_HOURS) &&
+                        (int)minuteSpinner.getValue() <= MAX_MINUTES &&
+                        (int)minuteSpinner.getValue() >= (-MAX_MINUTES) &&
+                        (int)secondSpinner.getValue() <= MAX_SECONDS &&
+                        (int)secondSpinner.getValue() >= (-MAX_SECONDS) &&
+                        (int)millisecondSpinner.getValue() <= MAX_MILLISECONDS &&
+                        (int)millisecondSpinner.getValue() >= (-MAX_MILLISECONDS)) {
 
+
+                    if ((!txtInputPath.getText().isEmpty() &&
+                            !txtOutputPath.getText().isEmpty() &&
+                            !txtFileName.getText().isEmpty()) &&
+                            !(txtInputPath.getText().substring(txtInputPath.getText().lastIndexOf(File.separator)))
+                                    .equals(File.separator + txtFileName.getText() + ".srt")){
+
+                        try {
+                            hourSpinner.commitEdit();
+                            minuteSpinner.commitEdit();
+                            secondSpinner.commitEdit();
+                            millisecondSpinner.commitEdit();
+                        } catch (ParseException ex) {
+                            logMe(ex.toString());
+                            throw new Exception("Something went wrong!");
+                        }
+                        int temphour = (Integer) hourSpinner.getValue();
+                        int tempminute = (Integer) minuteSpinner.getValue();
+                        int tempsecond = (Integer) secondSpinner.getValue();
+                        int tempmilli = (Integer) millisecondSpinner.getValue();
+
+                        try {
+                            SubtitleShifter shifter = new SubtitleShifter();
+                            shifter.processFile(shifter.openFile(txtInputPath.getText()),
+                                    (txtOutputPath.getText() + File.separator + txtFileName.getText() + ".srt"),
+                                    temphour,
+                                    tempminute,
+                                    tempsecond,
+                                    tempmilli);
+
+                            JOptionPane.showMessageDialog(frame,
+                                    "Time shifted successfully!",
+                                    "Success", JOptionPane.PLAIN_MESSAGE);
+
+                        } catch (Exception xx) {
+                            logMe(xx.toString());
+                            JOptionPane.showMessageDialog(frame,
+                                    "Something went wrong!",
+                                    "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+
+                    } else {
+                            JOptionPane.showMessageDialog(frame,
+                                    "Please enter correct paths for the files!\n" +
+                                            "Note: The opened and the new subtitle file names must not match!",
+                                    "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+
+                } else{
+                    // TODO LOGGING
+                    JOptionPane.showMessageDialog(frame,
+                            "Please enter closer values to zero!.",
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception x) {
+                logMe(x.toString());
+                JOptionPane.showMessageDialog(frame,
+                        "Something is wrong with the subtite file." +
+                                "Please check it!",
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+    }
+
+    private void initFirstTopPanel(){
+        firstTopPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        topPanel.add(firstTopPanel);
+        firstTopPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
+                "Step 1: Open a subtitle to work with",
+                TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        btnOpenInput = new JButton("Open");
+        btnOpenInput.addActionListener(e ->
+        {
+            try {
+                JFileChooser fc = new JFileChooser();
+                fc.setCurrentDirectory(new File(System.getProperty("user.home")));
+                fc.setDialogTitle("Select the subtitle file");
+                fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                fc.setFileFilter(new FileNameExtensionFilter("Subtitles", "srt"));
+                fc.showOpenDialog(frame);
+                txtInputPath.setText(fc.getSelectedFile().getAbsolutePath());
+            } catch (Exception y) {
+                logMe(y.toString());
+                JOptionPane.showMessageDialog(frame,
+                        "Please select a subtitle!",
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        btnOpenInput.setHorizontalAlignment(SwingConstants.LEFT);
+        firstTopPanel.add(btnOpenInput);
+
+        txtInputPath = new JTextField();
+        firstTopPanel.add(txtInputPath);
+        txtInputPath.setColumns(34);
+    }
+
+    private void initSecondTopPanel(){
+        secondTopPanel = new JPanel();
+        topPanel.add(secondTopPanel);
+        secondTopPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
+                "Step 2: Select a folder and enter a name for the new subtitle",
+                TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        btnOpenOutput = new JButton("Open");
+        btnOpenOutput.addActionListener(e ->
+        {
+            try {
+                JFileChooser fc = new JFileChooser();
+                fc.setCurrentDirectory(new File(System.getProperty("user.home")));
+                fc.setDialogTitle("Select a folder for the output");
+                fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                fc.showOpenDialog(frame);
+                txtOutputPath.setText(fc.getSelectedFile().getAbsolutePath());
+            } catch (Exception y) {
+                logMe(y.toString());
+                JOptionPane.showMessageDialog(frame,
+                        "Please select a folder!",
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        btnOpenOutput.setHorizontalAlignment(SwingConstants.LEFT);
+        secondTopPanel.add(btnOpenOutput);
+
+        txtOutputPath = new JTextField();
+        secondTopPanel.add(txtOutputPath);
+        txtOutputPath.setColumns(18);
+
+        JLabel lblSlash = new JLabel(File.separator);
+        lblSlash.setVerticalAlignment(SwingConstants.BOTTOM);
+        secondTopPanel.add(lblSlash);
+
+        txtFileName = new JTextField();
+        secondTopPanel.add(txtFileName);
+        txtFileName.setColumns(12);
+
+        JLabel lblExtension = new JLabel(".srt");
+        //lblExtension.setVerticalAlignment(SwingConstants.BOTTOM);
+        secondTopPanel.add(lblExtension);
+
+    }
+
+    private void initHoursPanel(){
         JPanel panelHours = new JPanel();
         middlePanel.add(panelHours);
         panelHours.setLayout(null);
@@ -83,147 +274,49 @@ public class GUI {
         hourSpinner = new JSpinner();
         hourSpinner.setBounds(12, 24, 100, 30);
         panelHours.add(hourSpinner);
+    }
 
+    private void initMinutesPanel(){
         JPanel panelMinutes = new JPanel();
+        middlePanel.add(panelMinutes);
         panelMinutes.setLayout(null);
         panelMinutes.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Minutes", TitledBorder.LEFT, TitledBorder.TOP, null, new Color(0, 0, 0)));
-        middlePanel.add(panelMinutes);
 
         minuteSpinner = new JSpinner();
         minuteSpinner.setBounds(12, 24, 100, 30);
         panelMinutes.add(minuteSpinner);
+    }
 
+    private void initSecondsPanel(){
         JPanel panelSeconds = new JPanel();
-        panelSeconds.setLayout(null);
-        panelSeconds.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Seconds", TitledBorder.LEFT, TitledBorder.TOP, null, new Color(0, 0, 0)));
         middlePanel.add(panelSeconds);
-
+        panelSeconds.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Seconds", TitledBorder.LEFT, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        panelSeconds.setLayout(null);
         secondSpinner = new JSpinner();
         secondSpinner.setBounds(12, 24, 100, 30);
         panelSeconds.add(secondSpinner);
+    }
 
+    private void initMillisPanel(){
         JPanel panelMillis = new JPanel();
-        panelMillis.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Milliseconds", TitledBorder.LEFT, TitledBorder.TOP, null, new Color(0, 0, 0)));
         middlePanel.add(panelMillis);
+        panelMillis.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Milliseconds", TitledBorder.LEFT, TitledBorder.TOP, null, new Color(0, 0, 0)));
         panelMillis.setLayout(null);
-
         millisecondSpinner = new JSpinner();
         millisecondSpinner.setBounds(12, 24, 100, 30);
         panelMillis.add(millisecondSpinner);
+    }
 
-        JPanel panel_2 = new JPanel();
-        panel_2.setBorder(new EmptyBorder(10, 5, 5, 5));
-        panel.add(panel_2, BorderLayout.NORTH);
-
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panel_2.setLayout(new GridLayout(2, 1, 0, 0));
-        panel_2.add(topPanel);
-        topPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Step 1: Open a subtitle to work with", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-
-        openButton = new JButton("Open");
-        openButton.addActionListener(e ->
-        {
-            try {
-                JFileChooser fc = new JFileChooser();
-                fc.setCurrentDirectory(new File(System.getProperty("user.home")));
-                fc.setDialogTitle("Select the subtitle file");
-                fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                fc.setFileFilter(new FileNameExtensionFilter("Subtitles", "srt"));
-                fc.showOpenDialog(frmSubtitleShifter);
-                txtPath.setText(fc.getSelectedFile().getAbsolutePath());
-            } catch (Exception y) {
-                JOptionPane.showMessageDialog(frmSubtitleShifter,
-                        "Please select a subtitle!",
-                        "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-        openButton.setHorizontalAlignment(SwingConstants.LEFT);
-        topPanel.add(openButton);
-
-        txtPath = new JTextField();
-        topPanel.add(txtPath);
-        txtPath.setColumns(30);
-
-        JPanel bopa = new JPanel();
-        bopa.setBorder(new EmptyBorder(0, 5, 5, 5));
-        panel_2.add(bopa);
-
-        JPanel toptitle = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        bopa.add(toptitle);
-        toptitle.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Step 2: Select a folder for the output file", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-
-        openButton2 = new JButton("Open");
-        openButton2.addActionListener(e ->
-        {
-            try {
-                JFileChooser fc = new JFileChooser();
-                fc.setCurrentDirectory(new File(System.getProperty("user.home")));
-                fc.setDialogTitle("Select a folder for the output");
-                fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                fc.showOpenDialog(frmSubtitleShifter);
-                txtPath2.setText(fc.getSelectedFile().getAbsolutePath());
-            } catch (Exception y) {
-                JOptionPane.showMessageDialog(frmSubtitleShifter,
-                        "Please select a folder!",
-                        "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-        openButton2.setHorizontalAlignment(SwingConstants.LEFT);
-        toptitle.add(openButton2);
-
-        txtPath2 = new JTextField();
-        toptitle.add(txtPath2);
-        txtPath2.setColumns(30);
-
-        okButton.addActionListener(e ->
-        {
-            try {
-                if (!txtPath.getText().isEmpty() && !txtPath2.getText().isEmpty()) {
-                    try {
-                        hourSpinner.commitEdit();
-                        minuteSpinner.commitEdit();
-                        secondSpinner.commitEdit();
-                        millisecondSpinner.commitEdit();
-                    } catch (ParseException ex) {
-                        ex.printStackTrace();
-                    }
-                    int temphour = (Integer) hourSpinner.getValue();
-                    int tempminute = (Integer) minuteSpinner.getValue();
-                    int tempsecond = (Integer) secondSpinner.getValue();
-                    int tempmilli = (Integer) millisecondSpinner.getValue();
-
-                    try {
-                        SubtitleShifter shifter = new SubtitleShifter();
-                        shifter.processFile(shifter.openFile(txtPath.getText()),
-                                (txtPath2.getText() + File.separator + "SubShifter.srt"),
-                                temphour,
-                                tempminute,
-                                tempsecond,
-                                tempmilli);
-
-                        JOptionPane.showMessageDialog(frmSubtitleShifter,
-                                "Time shifted successfully!",
-                                "Success", JOptionPane.PLAIN_MESSAGE);
-
-                    } catch (Exception xx) {
-                        xx.printStackTrace();
-                        JOptionPane.showMessageDialog(frmSubtitleShifter,
-                                "Something went wrong!",
-                                "Error", JOptionPane.ERROR_MESSAGE);
-                    }
-
-                } else {
-                    JOptionPane.showMessageDialog(frmSubtitleShifter,
-                            "Please enter correct paths for the files!",
-                            "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            } catch (Exception x) {
-                x.printStackTrace();
-                JOptionPane.showMessageDialog(frmSubtitleShifter,
-                        "Something wrong with the subtite file." +
-                                "Please check it!",
-                        "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        });
+    private void logMe(String s){
+        logger.setLevel(Level.FINE);
+        try {
+            Handler fileHandler = new FileHandler(System.getProperty("user.dir") +
+                    File.separator + "error.log", 2000, 1, true);
+            fileHandler.setFormatter(new MyFormatter());
+            logger.addHandler(fileHandler);
+            logger.info(s);
+        } catch (SecurityException | IOException e) {
+            e.printStackTrace();
+        }
     }
 }
