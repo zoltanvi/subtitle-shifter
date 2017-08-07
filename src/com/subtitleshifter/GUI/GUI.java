@@ -36,6 +36,7 @@ public class GUI{
     private JPanel firstTopPanel;
     private JPanel secondTopPanel;
     private JPanel mainPanel;
+    private Handler fileHandler;
     private JTextField txtFileName;
     static Logger logger = Logger.getLogger(GUI.class.getName());
     private static final int MAX_HOURS = 580;
@@ -174,7 +175,6 @@ public class GUI{
                         }
 
                 } else{
-                    // TODO LOGGING
                     JOptionPane.showMessageDialog(frame,
                             "Please enter closer values to zero!.",
                             "Error", JOptionPane.ERROR_MESSAGE);
@@ -204,19 +204,20 @@ public class GUI{
                 fc.setDialogTitle("Select the subtitle file");
                 fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 fc.setFileFilter(new FileNameExtensionFilter("Subtitles", "srt"));
-                fc.showOpenDialog(frame);
-                txtInputPath.setText(fc.getSelectedFile().getAbsolutePath());
+                int result = fc.showOpenDialog(null);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    File f = fc.getSelectedFile();
+                    txtInputPath.setText(f.getAbsolutePath());
+                }
             } catch (Exception y) {
-                logMe(y.toString());
-                JOptionPane.showMessageDialog(frame,
-                        "Please select a subtitle!",
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                logMe(y.getMessage());
             }
         });
         btnOpenInput.setHorizontalAlignment(SwingConstants.LEFT);
         firstTopPanel.add(btnOpenInput);
 
         txtInputPath = new JTextField();
+        txtInputPath.setEditable(false);
         firstTopPanel.add(txtInputPath);
         txtInputPath.setColumns(34);
     }
@@ -235,19 +236,20 @@ public class GUI{
                 fc.setCurrentDirectory(new File(System.getProperty("user.home")));
                 fc.setDialogTitle("Select a folder for the output");
                 fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                fc.showOpenDialog(frame);
-                txtOutputPath.setText(fc.getSelectedFile().getAbsolutePath());
+                int result = fc.showOpenDialog(null);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    File f = fc.getSelectedFile();
+                    txtOutputPath.setText(f.getAbsolutePath());
+                }
             } catch (Exception y) {
-                logMe(y.toString());
-                JOptionPane.showMessageDialog(frame,
-                        "Please select a folder!",
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                logMe(y.getMessage());
             }
         });
         btnOpenOutput.setHorizontalAlignment(SwingConstants.LEFT);
         secondTopPanel.add(btnOpenOutput);
 
         txtOutputPath = new JTextField();
+        txtOutputPath.setEditable(false);
         secondTopPanel.add(txtOutputPath);
         txtOutputPath.setColumns(18);
 
@@ -260,7 +262,6 @@ public class GUI{
         txtFileName.setColumns(12);
 
         JLabel lblExtension = new JLabel(".srt");
-        //lblExtension.setVerticalAlignment(SwingConstants.BOTTOM);
         secondTopPanel.add(lblExtension);
 
     }
@@ -310,8 +311,8 @@ public class GUI{
     private void logMe(String s){
         logger.setLevel(Level.FINE);
         try {
-            Handler fileHandler = new FileHandler(System.getProperty("user.dir") +
-                    File.separator + "error.log", 2000, 1, true);
+            fileHandler = new FileHandler(System.getProperty("user.dir") +
+                        File.separator + "error.log", 20000, 1, true);
             fileHandler.setFormatter(new MyFormatter());
             logger.addHandler(fileHandler);
             logger.info(s);
