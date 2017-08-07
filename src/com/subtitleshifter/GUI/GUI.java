@@ -223,7 +223,7 @@ public class GUI{
     }
 
     private void initSecondTopPanel(){
-        secondTopPanel = new JPanel();
+        secondTopPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         topPanel.add(secondTopPanel);
         secondTopPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
                 "Step 2: Select a folder and enter a name for the new subtitle",
