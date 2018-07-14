@@ -1,6 +1,6 @@
 # Subtitle Shifter
 
-A java application to resync the timestamps in a subtitle.
+A java application to resync the timestamps in a subtitle file.
 
 ### Prerequisites
 
@@ -11,7 +11,10 @@ You can download it here
 http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html
 ```
 
-### Example
+### Screenshots
 
-![alt text](https://user-images.githubusercontent.com/27699756/29027734-3d71d102-7b82-11e7-917d-e65bb3f7bf51.png "Example")
+![alt text](https://user-images.githubusercontent.com/27699756/42723035-64be3166-8756-11e8-8bdb-c47d8ed06ba0.png)
 
+Inside the subtitle file:
+
+![alt text](https://user-images.githubusercontent.com/27699756/42723036-64e0799c-8756-11e8-9358-01465b0255ce.png)
